@@ -1,21 +1,33 @@
-import React from 'react'
+import React, {useState, useEffect} from 'react'
 import MoreVertIcon from "@material-ui/icons/MoreVert"
 import {IconButton} from "@material-ui/core"
 import UnFoldMoreIcon from "@material-ui/icons/UnfoldMore"
 import "./Template.css"
 
-import blank from "../assets/blankForm.png"
+import blank from "../assets/GreenSign.webp"
 import uuid from "react-uuid"
 import {useHistory} from 'react-router-dom';
+import axios from "axios";
 
 function Template(){
     const history = useHistory();
 
     const createForm = () => {
-        const id_ =uuid();
 
-        history.push("/form/"+id_)
+
+        var create_form_id = uuid();
+        console.log(create_form_id)
+
+        history.push("/form/" + create_form_id)
+
+        var questions_list= [{questionText: "Question", questionType: "radio", options: [{optionText: "Option 1"}], open: true, required: false}]
+            axios.post(`http://localhost:9000/add_questions/${create_form_id}`,{
+                "document_name": "untitled_form",
+                "doc_desc": "Add Description",
+                "questions": questions_list,
+            })
     }
+
     return(
         <div className="template_section">
             <div className= "template_top">

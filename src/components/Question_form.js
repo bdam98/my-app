@@ -26,22 +26,69 @@ import {Typography} from '@material-ui/core';
 import MenuItem from '@material-ui/core/MenuItem';
 import DragIndicatorIcon from '@material-ui/icons/DragIndicator';
 import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd";
+import axios from "axios";
+import {useParams} from "react-router";
 
 import "./Question_form.css"
+import {actionTypes} from './reducer';
+import {useStateValue} from './StateProvider'
 
 function Question_form(){
+    const{id}= useParams();
+    const[{}, dispatch] = useStateValue();
+
+
     const [questions, setQuestions] = useState(
-        [{questionText: "Which class is this for ? ", 
-        questionType: "radio", 
+        [{questionText: "Personal Information ", 
+        questionType: "text", 
         options : [
-            {optionText: "CSC60"},
-            {optionText: "CSC130"},
-            {optionText: "CSC131"},
-            {optionText: "CSC35"}
+            {optionText: "First Name"},
+            {optionText: "Middle Name"},
+            {optionText: "Last Name"},
+            {optionText: "Date of Birth"},
+            {optionText: "Gender"},
+            {optionText: "Address"},
+            {optionText: "Mobile Number"},
+            {optionText: "Comments"},
         ],
     open: true,
     required: false}]
     )
+
+    const[documentName, setDocName] = useState("Webform Generator");
+    const[documentDescription, setDocDesc] = useState("Please input information below");
+
+    useEffect(()=> {
+    async function data_adding(){
+        var request = await axios.get(`http://localhost:9000/data/${id}`);
+        console.log(question_data)
+        var question_data = request.data.questions;
+        var doc_name= request.data.document_name
+        var doc_descip = request.data.doc_desc
+        console.log(doc_name+""+doc_descip)
+        setDocName(doc_name)
+        setDocDesc(doc_descip)
+        setQuestions(question_data)
+        dispatch({
+            type: actionTypes.SET_DOC_NAME,
+            doc_name: doc_name})
+
+        dispatch({
+            type: actionTypes.SET_DOC_DESC,
+            doc_desc: doc_descip})
+
+        dispatch({
+            type: actionTypes.SET_QUESTIONs,
+            questions:question_data
+        })
+    }
+
+    data_adding()
+    },[])
+    
+
+    //let {id} = useParams();
+    //console.log(id)
 
     function changeQuestion(text, i){
         var newQuestion = [...questions];
@@ -77,10 +124,10 @@ function Question_form(){
 
     function addOption(i){
         var optionsOfQuestion = [...questions];
-        if (optionsOfQuestion[i].options.length < 5){
+        if (optionsOfQuestion[i].options.length < 15){
             optionsOfQuestion[i].options.push({optionText: "Option " + (optionsOfQuestion[i].options.length + 1)})
         } else {
-            console.log("Max 5 options ");
+            console.log("Max 15 options ");
         }
         setQuestions(optionsOfQuestion)
     }
@@ -155,6 +202,20 @@ function Question_form(){
         setQuestions(qs);
     }
 
+    function commitToDB(){
+        
+        dispatch({
+            type: actionTypes.SET_QUESTIONs,
+            questions:questions
+        })
+
+        axios.post(`http://localhost:9000/add_questions/${id}`,{
+          "document_name": documentName,
+          "doc_desc": documentDescription,
+          "questions": questions,
+         })
+    }
+
     function questionsUI() {
         return questions.map((ques, i)=>(
             <Draggable key= {i} draggableId={i + 'id'} index= {i}>
@@ -210,7 +271,7 @@ function Question_form(){
                         <input type= "text" className= "question" placeholder= "Question" value= {ques.questionText} onChange={(e)=>{changeQuestion(e.target.value, i)}}></input>
                         <CropOriginalIcon style= {{color: "#5f6368"}} />
                         <Select className= "select" style= {{color: "#5f6368", fontSize: "13px"}} >
-                            <MenuItem id= "text" value= "text" onClick= {()=>{addQuestionType(i, "text")}}> <SubjectIcon style= {{marginRight: "10px"}} /> Paragraph </MenuItem>
+                            <MenuItem id= "text" value= "text" onClick= {()=>{addQuestionType(i, "text")}}> <SubjectIcon style= {{marginRight: "10px"}} /> Text </MenuItem>
                             <MenuItem id= "checkbox" value= "Checkbox" onClick= {()=>{addQuestionType(i, "checkbox")}}> <CheckBoxIcon style= {{marginRight: "10px", color: "#70757a"}} checked/> Checkboxes</MenuItem>
                             <MenuItem id= "radio" value= "Radio" onClick= {()=>{addQuestionType(i, "radio")}}> <Radio style= {{marginRight: "10px", color: "#70757a"}} checked/> Multiple Choice</MenuItem>
                         </Select>
@@ -235,7 +296,7 @@ function Question_form(){
                         </div>
 
                     ))}
-                        {ques.options.length < 5 ? (
+                        {ques.options.length < 15 ? (
                             <div className = "add_question_body">
                                 <FormControlLabel disabled control= {
                                 (ques.questoinType !== "text") ?
@@ -279,9 +340,6 @@ function Question_form(){
 
             <div className= "question_edit">
                     <AddCircleOutlineIcon onClick={addMoreQuestionField} className= "edit"/>
-                    <OndemandVideoIcon className= "edit"/>
-                    <CropOriginalIcon className= "edit"/>
-                    <TextFieldsIcon className= "edit" />
             </div>
         </div>):" "}
 </Accordion>
@@ -304,8 +362,8 @@ function Question_form(){
                 <div className= "section">
                     <div calssName= "question_title_section">
                         <div className= "question_form_top">
-                            <input type= "text" className= "question_form_top_name" style= {{color: "black"}} placeholder= "Untitled Document"></input>
-                            <input type= "text" className= "question_form_top_desc" placeholder= "Form Description"></input>
+                            <input type= "text" className= "question_form_top_name" style= {{color: "black"}} placeholder= "Webform Generator" onChange={(e)=> {setDocName(e.target.value)}}></input>
+                            <input type= "text" className= "question_form_top_desc" placeholder= "Please input information below" onChange={(e)=> {setDocDesc(e.target.value)}}></input>
                         </div>
                     </div>
                 <DragDropContext onDragEnd={onDragEnd}>
@@ -321,6 +379,9 @@ function Question_form(){
                         )}
                     </Droppable>
                 </DragDropContext>
+                <div className= "save_form">
+                    <Button variant= "contained" color= "grey" onClick={commitToDB} style= {{fontSize: "14px"}}>Save</Button>
+                </div>
 
                 
                 </div>

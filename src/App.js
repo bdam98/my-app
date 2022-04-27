@@ -1,3 +1,4 @@
+import React from 'react';
 import Header from "./components/Header"
 import Template from "./components/Template"
 import Mainbody from "./components/Mainbody"
@@ -6,6 +7,7 @@ import Centeredtabs from "./components/Tabs";
 import Question_form from "./components/Question_form";
 import './App.css';
 import {BrowserRouter as Router, Switch, Route} from "react-router-dom"
+import Userform from './components/Userform';
 
 function App() {
   return (
@@ -16,8 +18,14 @@ function App() {
         <Route path= "/form/:id">
           <Formheader />
           <Centeredtabs />
-          <Question_form />
+          
           </Route>
+
+
+          <Route path= "/response">
+              <Userform />
+          </Route>
+          
           <Route path= "/">
             <Header />
             <Template />
